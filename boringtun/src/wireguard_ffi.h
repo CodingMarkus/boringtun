@@ -60,19 +60,21 @@ int check_base64_encoded_x25519_key(const char *key);
 
 /// Sets the default tracing_subscriber to write to `log_func`.
 ///
-/// Uses Compact format without level, target, thread ids, thread names, or ansi control characters.
+/// Uses Compact format without level, target, thread ids, thread names,
+/// or ANSI control characters.
 /// Subscribes to TRACE level events.
 ///
-/// This function should only be called once as setting the default tracing_subscriber
-/// more than once will result in an error.
+/// This function should only be called once as setting the default
+/// tracing_subscriber more than once will result in an error.
 ///
 /// Returns false on failure.
 ///
 /// # Safety
 ///
-/// `c_char` will be freed by the library after calling `log_func`. If the value needs
-/// to be stored then `log_func` needs to create a copy, e.g. `strcpy`.
-bool set_logging_function(void (*log_func)(const char *));
+/// `c_char` will be freed by the library after calling `log_func`.
+/// If the value needs to be stored then `log_func` needs to create a copy,
+/// e.g. `strcpy`.
+bool set_logging_function(void (*log_func)(const char *), uintptr_t context);
 
 // Allocate a new tunnel
 struct wireguard_tunnel *new_tunnel(const char *static_private,
