@@ -74,7 +74,7 @@ int check_base64_encoded_x25519_key(const char *key);
 /// `c_char` will be freed by the library after calling `log_func`.
 /// If the value needs to be stored then `log_func` needs to create a copy,
 /// e.g. `strcpy`.
-bool set_logging_function(void (*log_func)(const char *), uintptr_t context);
+bool set_logging_function(void (*log_func)(uintptr_t, const char *), uintptr_t context);
 
 // Allocate a new tunnel
 struct wireguard_tunnel *new_tunnel(const char *static_private,
