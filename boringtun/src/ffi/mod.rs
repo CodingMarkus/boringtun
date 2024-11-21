@@ -165,7 +165,8 @@ pub unsafe extern "C" fn check_base64_encoded_x25519_key(key: *const c_char) -> 
 
 /// Custom tracing_subscriber writer to an external function pointer
 struct FFIFunctionPointerWriter {
-    log_func: unsafe extern "C" fn(*const c_char),
+    log_func: unsafe extern "C" fn(usize, *const c_char),
+    log_func_ctx: usize
 }
 
 /// Implements Write trait for use with tracing_subscriber
@@ -173,7 +174,7 @@ impl Write for FFIFunctionPointerWriter {
     fn write(&mut self, buf: &[u8]) -> Result<usize, std::io::Error> {
         let out_str = String::from_utf8_lossy(buf).to_string();
         if let Ok(c_string) = CString::new(out_str) {
-            unsafe { (self.log_func)(c_string.as_ptr()) }
+            unsafe { (self.log_func)(self.log_func_ctx, c_string.as_ptr()) }
             Ok(buf.len())
         } else {
             Err(Error::new(
@@ -191,24 +192,27 @@ impl Write for FFIFunctionPointerWriter {
 
 /// Sets the default tracing_subscriber to write to `log_func`.
 ///
-/// Uses Compact format without level, target, thread ids, thread names, or ansi control characters.
+/// Uses Compact format without level, target, thread ids, thread names,
+/// or ANSI control characters.
 /// Subscribes to TRACE level events.
 ///
-/// This function should only be called once as setting the default tracing_subscriber
-/// more than once will result in an error.
+/// This function should only be called once as setting the default
+/// tracing_subscriber more than once will result in an error.
 ///
 /// Returns false on failure.
 ///
 /// # Safety
 ///
-/// `c_char` will be freed by the library after calling `log_func`. If the value needs
-/// to be stored then `log_func` needs to create a copy, e.g. `strcpy`.
+/// `c_char` will be freed by the library after calling `log_func`.
+/// If the value needs to be stored then `log_func` needs to create a copy,
+/// e.g. `strcpy`.
 #[no_mangle]
 pub unsafe extern "C" fn set_logging_function(
-    log_func: unsafe extern "C" fn(*const c_char),
+    log_func: unsafe extern "C" fn(usize, *const c_char),
+    log_func_ctx: usize
 ) -> bool {
     let result = std::panic::catch_unwind(|| -> bool {
-        let writer = FFIFunctionPointerWriter { log_func };
+        let writer = FFIFunctionPointerWriter { log_func, log_func_ctx };
         let format = fmt::format()
             // don't include levels in formatted output
             .with_level(false)
